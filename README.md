@@ -29,3 +29,6 @@ Want to run or tweak it yourself? Here’s how:
    ```bash
    git clone https://github.com/ujo4eva/lightmap.git
    cd lightmap
+
+## To-Do
+- Add dropdowns to show update history
