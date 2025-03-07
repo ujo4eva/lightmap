@@ -1,21 +1,31 @@
-# Campus Power Tracker
+# Lightmap
 
-A web app to help students on a university campus with spotty power find out where the juice is flowing. Powered by crowdsourced reports—no fancy sensors, just student smarts.
+A web app to help students on a university campus with unreliable power track where the lights are on. Powered by crowdsourced reports—no fancy sensors, just student smarts. Built with HTML, CSS, JavaScript, and a Node.js backend, deployed on Vercel.
 
-## What It Does
-- Shows a list of campus spots (like Library, Dorm A, Cafeteria) and their power status (On/Off).
-- Lets students report whether power’s on or off at a location.
-- Built for learning and solving a real problem!
+## Live Demo
+Check it out: [lightmap.vercel.app](https://lightmap.vercel.app)
 
-## How to Run It
-1. Clone this repo: `git clone <your-repo-url>`
-2. Open `index.html` in a web browser (e.g., Chrome or Firefox).
-3. Click around—report power statuses and watch the list update (it’s all local for now).
+## Features
+- **Real-Time Status**: See the latest power status for hostels, cafes, and classrooms.
+- **Crowdsourced Updates**: Report “Power On” or “Power Off” for any location.
+- **Simple UI**: Clean, mobile-friendly design with color-coded categories.
+- **Backend API**: Stores reports and serves the latest statuses.
 
-## Status
-Work in progress! Right now, it’s a basic frontend with fake data. Next up: adding a backend to save reports for real.
+## How It Works
+1. Visit the site.
+2. Browse locations (e.g., Prophet Moses Hall, Mimi’s, Auditorium).
+3. Use the dropdown and buttons to report power status.
+4. Watch the list update with timestamps.
 
-## To-Do
-- Hook up a server to store reports.
-- Make it look prettier.
-- Share it with campus friends for testing.
+## Local Setup
+Want to run or tweak it yourself? Here’s how:
+
+### Prerequisites
+- [Node.js](https://nodejs.org) (v18.x recommended)
+- Git
+
+### Steps
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/ujo4eva/lightmap.git
+   cd lightmap
