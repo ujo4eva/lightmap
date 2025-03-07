@@ -1,0 +1,20 @@
+{
+  "name": "lightmap",
+  "version": "1.0.0",
+  "description": "A web app to help students on a university campus with spotty power find out where the juice is flowing. Powered by crowdsourced reports—no fancy sensors, just student smarts.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "engines": {
+  "node": "18.x"
+  }
+}

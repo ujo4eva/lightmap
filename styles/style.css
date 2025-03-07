@@ -1,0 +1,78 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+h1 {
+    color: #333;
+}
+
+h2 {
+    margin-top: 30px;
+}
+
+#locations {
+    margin-bottom: 20px;
+}
+
+.hostel, .cafe, .classroom {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: #f9f9f9;
+}
+
+.hostel {
+    border-left: 4px solid #4CAF50; /* Green for hostels */
+}
+
+.cafe {
+    border-left: 4px solid #FF9800; /* Orange for cafes */
+}
+
+.classroom {
+    border-left: 4px solid #2196F3; /* Blue for classrooms */
+}
+
+span {
+    font-size: 0.8em;
+    color: #666;
+}
+
+form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+select {
+    padding: 8px;
+    flex-grow: 1;
+}
+
+button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+}
+
+.power-on {
+    background: #4CAF50; /* Green */
+}
+
+.power-on:hover {
+    background: #45a049;
+}
+
+.power-off {
+    background: #F44336; /* Red */
+}
+
+.power-off:hover {
+    background: #da190b;
+}
