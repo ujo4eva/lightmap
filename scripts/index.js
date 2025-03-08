@@ -5,7 +5,7 @@ function timeAgo(timestamp) {
     const now = new Date();
     const then = new Date(timestamp);
     const diffMs = now - then;
-    const diffMins = Math.floor(diffMs / 60000); // Milliseconds to minutes
+    const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 1) return "Just now";
     if (diffMins < 60) return `${diffMins} min${diffMins === 1 ? "" : "s"} ago`;
     const diffHours = Math.floor(diffMins / 60);
@@ -59,13 +59,14 @@ function renderHistory(location, listElement) {
             return response.json();
         })
         .then(history => {
-            listElement.innerHTML = ""; // Clear previous list
+            listElement.innerHTML = "";
             if (history.length === 0) {
                 listElement.innerHTML = "<li>No history yet</li>";
             } else {
                 history.forEach(report => {
                     const li = document.createElement("li");
                     li.textContent = `${report.status} - ${new Date(report.timestamp).toLocaleString()} (${timeAgo(report.timestamp)})`;
+                    li.classList.add(report.status === "Power On" ? "status-on" : "status-off");
                     listElement.appendChild(li);
                 });
             }
@@ -76,21 +77,28 @@ function renderHistory(location, listElement) {
         });
 }
 
+// Function to update "time ago" dynamically
+function updateTimeAgo() {
+    document.querySelectorAll(".history-list.visible").forEach(list => {
+        const location = list.closest("[data-location]").dataset.location;
+        renderHistory(location, list); // Re-render to refresh "time ago"
+    });
+}
+
 // Function to toggle history visibility
 function attachHistoryListeners() {
     document.querySelectorAll(".history-toggle").forEach(button => {
         button.addEventListener("click", () => {
-            const list = button.parentElement.nextElementSibling; // .history-list
-            const isVisible = list.style.display === "block";
-            list.style.display = isVisible ? "none" : "block";
+            const list = button.parentElement.nextElementSibling;
+            const isVisible = list.classList.contains("visible");
+            list.classList.toggle("visible", !isVisible);
             button.textContent = isVisible ? "▼ History" : "▲ History";
             button.classList.toggle("active", !isVisible);
 
-            // Fetch history only if opening and not yet loaded
             if (!isVisible && !list.dataset.loaded) {
                 const location = button.closest("[data-location]").dataset.location;
                 renderHistory(location, list);
-                list.dataset.loaded = "true"; // Mark as loaded
+                list.dataset.loaded = "true";
             }
         });
     });
@@ -107,3 +115,6 @@ document.querySelectorAll(".power-on, .power-off").forEach(button => {
 
 // Initial render
 fetchAndRenderStatuses();
+
+// Auto-update "time ago" every minute
+setInterval(updateTimeAgo, 60000);

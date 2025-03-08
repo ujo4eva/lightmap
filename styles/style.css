@@ -104,12 +104,27 @@ button {
     background: #fff;
     border: 1px solid #eee;
     border-radius: 3px;
+    max-height: 0; /* Start collapsed */
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out; /* Smooth slide */
+}
+
+.history-list.visible {
+    max-height: 200px; /* Adjust based on content; big enough for a few items */
 }
 
 .history-list li {
     padding: 5px 0;
     font-size: 0.9em;
     border-bottom: 1px solid #f0f0f0;
+}
+
+.history-list li.status-on {
+    color: #4CAF50; /* Green for "On" */
+}
+
+.history-list li.status-off {
+    color: #F44336; /* Red for "Off" */
 }
 
 .history-list li:last-child {
