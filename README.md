@@ -31,5 +31,4 @@ Want to run or tweak it yourself? Here’s how:
    cd lightmap
 
 ## To-Do
-- Add dropdowns to show update history
-- Add dark modr
+- Add dark mode
