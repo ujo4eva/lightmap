@@ -104,12 +104,14 @@ button {
     background: #fff;
     border: 1px solid #eee;
     border-radius: 3px;
+    height: 0; /* Start collapsed */
     overflow: hidden;
-    max-height: 0; /* Start collapsed */
+    transition: height 0.3s ease-in-out; /* Smooth slide */
 }
 
 .history-list.visible {
-    max-height: 300px; /* Adjust based on content; big enough for a few items */
+    height: auto; /* Expands to content */
+    max-height: 300px; /* Cap for overflow */
 }
 
 .history-list li {
@@ -119,11 +121,11 @@ button {
 }
 
 .history-list li.status-on {
-    color: #4CAF50; /* Green for "On" */
+    color: #4CAF50;
 }
 
 .history-list li.status-off {
-    color: #F44336; /* Red for "Off" */
+    color: #F44336;
 }
 
 .history-list li:last-child {

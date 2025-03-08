@@ -29,10 +29,19 @@ function fetchAndRenderStatuses() {
                 const statusText = report.status;
                 const timeText = report.timestamp ? `(Updated: ${new Date(report.timestamp).toLocaleTimeString()})` : "";
                 const header = item.querySelector(".location-header");
-                // Preserve structure, update only text
-                header.childNodes[0].textContent = `${location}: ${statusText} `;
-                const span = header.querySelector("span") || header.appendChild(document.createElement("span"));
+                
+                // Clear and rebuild header to maintain order
+                header.innerHTML = "";
+                const textNode = document.createTextNode(`${location}: ${statusText} `);
+                const span = document.createElement("span");
                 span.textContent = timeText;
+                const button = header.querySelector(".history-toggle") || document.createElement("button");
+                button.className = "history-toggle";
+                button.textContent = "▼ History";
+
+                header.appendChild(textNode);
+                header.appendChild(span);
+                header.appendChild(button);
             });
             attachHistoryListeners();
         })
