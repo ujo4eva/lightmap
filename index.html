@@ -9,28 +9,86 @@
 <body>
     <h1>Campus Power Tracker</h1>
     <div id="locations">
-        <div class="hostel" data-location="Prophet Moses Hall">Prophet Moses Hall <button class="history-btn">History</button></div>
-        <div class="hostel" data-location="Prophet Moses Extension">Prophet Moses Extension <button class="history-btn">History</button></div>
-        <div class="hostel" data-location="Queen Esther Hall">Queen Esther Hall <button class="history-btn">History</button></div>
-        <div class="hostel" data-location="Queen Esther Extension">Queen Esther Extension <button class="history-btn">History</button></div>
-        <div class="hostel" data-location="Engineering">Engineering <button class="history-btn">History</button></div>
-        <div class="hostel" data-location="Guest House">Guest House <button class="history-btn">History</button></div>
-
-        <div class="cafe" data-location="Mimi's">Mimi's <button class="history-btn">History</button></div>
-        <div class="cafe" data-location="National Kitchen">National Kitchen <button class="history-btn">History</button></div>
-        <div class="cafe" data-location="Manna Palace">Manna Palace <button class="history-btn">History</button></div>
-        <div class="cafe" data-location="Double Portion">Double Portion <button class="history-btn">History</button></div>
-        <div class="cafe" data-location="Numbers Cafeteria">Numbers Cafeteria <button class="history-btn">History</button></div>
-        <div class="cafe" data-location="Food Mart">Food Mart <button class="history-btn">History</button></div>
-        <div class="cafe" data-location="Place of Hope">Place of Hope <button class="history-btn">History</button></div>
-        <div class="cafe" data-location="National Kitchen II">National Kitchen II <button class="history-btn">History</button></div>
-
-        <div class="classroom" data-location="Auditorium">Auditorium <button class="history-btn">History</button></div>
-        <div class="classroom" data-location="Event Center">Event Center <button class="history-btn">History</button></div>
-        <div class="classroom" data-location="LRs">LRs <button class="history-btn">History</button></div>
-        <div class="classroom" data-location="FENG/Sapetro LT">FENG/Sapetro LT <button class="history-btn">History</button></div>
-        <div class="classroom" data-location="Faculty of Law">Faculty of Law <button class="history-btn">History</button></div>
-        <div class="classroom" data-location="FBMS">FBMS <button class="history-btn">History</button></div>
+        <div class="hostel" data-location="Prophet Moses Hall">
+            <div class="location-header">Prophet Moses Hall <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="hostel" data-location="Prophet Moses Extension">
+            <div class="location-header">Prophet Moses Extension <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="hostel" data-location="Queen Esther Hall">
+            <div class="location-header">Queen Esther Hall <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="hostel" data-location="Queen Esther Extension">
+            <div class="location-header">Queen Esther Extension <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="hostel" data-location="Engineering">
+            <div class="location-header">Engineering <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="hostel" data-location="Guest House">
+            <div class="location-header">Guest House <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="Mimi's">
+            <div class="location-header">Mimi's <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="National Kitchen">
+            <div class="location-header">National Kitchen <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="Manna Palace">
+            <div class="location-header">Manna Palace <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="Double Portion">
+            <div class="location-header">Double Portion <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="Numbers Cafeteria">
+            <div class="location-header">Numbers Cafeteria <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="Food Mart">
+            <div class="location-header">Food Mart <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="Place of Hope">
+            <div class="location-header">Place of Hope <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="cafe" data-location="National Kitchen II">
+            <div class="location-header">National Kitchen II <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="classroom" data-location="Auditorium">
+            <div class="location-header">Auditorium <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="classroom" data-location="Event Center">
+            <div class="location-header">Event Center <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="classroom" data-location="LRs">
+            <div class="location-header">LRs <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="classroom" data-location="FENG/Sapetro LT">
+            <div class="location-header">FENG/Sapetro LT <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="classroom" data-location="Faculty of Law">
+            <div class="location-header">Faculty of Law <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
+        <div class="classroom" data-location="FBMS">
+            <div class="location-header">FBMS <button class="history-toggle">▼ History</button></div>
+            <ul class="history-list" style="display: none;"></ul>
+        </div>
     </div>
 
     <h2>Report Power Status</h2>
@@ -41,7 +99,6 @@
             <option value="Queen Esther Hall">Queen Esther Hall</option>
             <option value="Queen Esther Extension">Queen Esther Extension</option>
             <option value="Engineering">Engineering</option>
-            <option value="Guest House">Guest House</option>
             <option value="Mimi's">Mimi's</option>
             <option value="National Kitchen">National Kitchen</option>
             <option value="Manna Palace">Manna Palace</option>

@@ -1,5 +1,19 @@
 const BASE_URL = "";
 
+// Function to calculate "time ago" from a timestamp
+function timeAgo(timestamp) {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffMs = now - then;
+    const diffMins = Math.floor(diffMs / 60000); // Milliseconds to minutes
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min${diffMins === 1 ? "" : "s"} ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+}
+
 // Function to fetch and render latest statuses
 function fetchAndRenderStatuses() {
     fetch(`${BASE_URL}/api/status`)
@@ -15,9 +29,8 @@ function fetchAndRenderStatuses() {
                 const report = data[location] || { status: "Unknown", timestamp: null };
                 const statusText = report.status;
                 const timeText = report.timestamp ? `(Updated: ${new Date(report.timestamp).toLocaleTimeString()})` : "";
-                item.innerHTML = `${location}: ${statusText} <span>${timeText}</span> <button class="history-btn">History</button>`;
+                item.querySelector(".location-header").innerHTML = `${location}: ${statusText} <span>${timeText}</span> <button class="history-toggle">▼ History</button>`;
             });
-            // Reattach history button listeners after DOM update
             attachHistoryListeners();
         })
         .catch(error => console.error("Error fetching statuses:", error));
@@ -38,35 +51,47 @@ function submitReport(location, status) {
         .catch(error => console.error("Error submitting report:", error));
 }
 
-// Function to fetch and show history
-function showHistory(location) {
+// Function to fetch and render history
+function renderHistory(location, listElement) {
     fetch(`${BASE_URL}/api/history/${encodeURIComponent(location)}`)
         .then(response => {
             if (!response.ok) throw new Error("Failed to fetch history");
             return response.json();
         })
         .then(history => {
+            listElement.innerHTML = ""; // Clear previous list
             if (history.length === 0) {
-                alert(`No history yet for ${location}`);
-                return;
+                listElement.innerHTML = "<li>No history yet</li>";
+            } else {
+                history.forEach(report => {
+                    const li = document.createElement("li");
+                    li.textContent = `${report.status} - ${new Date(report.timestamp).toLocaleString()} (${timeAgo(report.timestamp)})`;
+                    listElement.appendChild(li);
+                });
             }
-            const historyText = history.map(report => 
-                `${report.status} - ${new Date(report.timestamp).toLocaleString()}`
-            ).join("\n");
-            alert(`History for ${location}:\n\n${historyText}`);
         })
         .catch(error => {
             console.error("Error fetching history:", error);
-            alert("Couldn’t load history—try again!");
+            listElement.innerHTML = "<li>Failed to load history</li>";
         });
 }
 
-// Function to attach history button listeners
+// Function to toggle history visibility
 function attachHistoryListeners() {
-    document.querySelectorAll(".history-btn").forEach(button => {
+    document.querySelectorAll(".history-toggle").forEach(button => {
         button.addEventListener("click", () => {
-            const location = button.parentElement.dataset.location;
-            showHistory(location);
+            const list = button.parentElement.nextElementSibling; // .history-list
+            const isVisible = list.style.display === "block";
+            list.style.display = isVisible ? "none" : "block";
+            button.textContent = isVisible ? "▼ History" : "▲ History";
+            button.classList.toggle("active", !isVisible);
+
+            // Fetch history only if opening and not yet loaded
+            if (!isVisible && !list.dataset.loaded) {
+                const location = button.closest("[data-location]").dataset.location;
+                renderHistory(location, list);
+                list.dataset.loaded = "true"; // Mark as loaded
+            }
         });
     });
 }
