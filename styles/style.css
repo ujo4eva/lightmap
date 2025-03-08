@@ -26,15 +26,21 @@ h2 {
 }
 
 .hostel {
-    border-left: 4px solid #4CAF50; /* Green for hostels */
+    border-left: 4px solid #4CAF50;
 }
 
 .cafe {
-    border-left: 4px solid #FF9800; /* Orange for cafes */
+    border-left: 4px solid #FF9800;
 }
 
 .classroom {
-    border-left: 4px solid #2196F3; /* Blue for classrooms */
+    border-left: 4px solid #2196F3;
+}
+
+.location-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 span {
@@ -62,7 +68,7 @@ button {
 }
 
 .power-on {
-    background: #4CAF50; /* Green */
+    background: #4CAF50;
 }
 
 .power-on:hover {
@@ -70,9 +76,58 @@ button {
 }
 
 .power-off {
-    background: #F44336; /* Red */
+    background: #F44336;
 }
 
 .power-off:hover {
     background: #da190b;
+}
+
+.history-toggle {
+    background: #607D8B;
+    padding: 5px 10px;
+    font-size: 0.9em;
+}
+
+.history-toggle:hover {
+    background: #455A64;
+}
+
+.history-toggle.active {
+    background: #455A64;
+}
+
+.history-list {
+    list-style: none;
+    padding: 10px;
+    margin: 5px 0 0 0;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 3px;
+    height: 0; /* Start collapsed */
+    overflow: hidden;
+    transition: height 0.3s ease-in-out; /* Smooth slide */
+}
+
+.history-list.visible {
+    height: auto; /* Expands to content */
+    max-height: 300px; /* Cap for overflow */
+}
+
+.history-list li {
+    padding: 5px 0;
+    font-size: 0.9em;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.history-list li.status-on {
+    color: #4CAF50;
+}
+
+.history-list li.status-off {
+    color: #F44336;
+}
+
+.history-list li:last-child {
+    border-bottom: none;
 }
