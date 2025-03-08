@@ -32,3 +32,4 @@ Want to run or tweak it yourself? Here’s how:
 
 ## To-Do
 - Add dropdowns to show update history
+- Add dark modr
