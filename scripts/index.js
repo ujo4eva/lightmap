@@ -22,14 +22,24 @@ function fetchAndRenderStatuses() {
             return response.json();
         })
         .then(data => {
-            const locationsDiv = document.getElementById("locations");
-            const items = locationsDiv.querySelectorAll("[data-location]");
+            const items = document.querySelectorAll("[data-location]");
             items.forEach(item => {
                 const location = item.dataset.location;
                 const report = data[location] || { status: "Unknown", timestamp: null };
                 const statusText = report.status;
                 const timeText = report.timestamp ? `(Updated: ${new Date(report.timestamp).toLocaleTimeString()})` : "";
-                item.querySelector(".location-header").innerHTML = `${location}: ${statusText} <span>${timeText}</span> <button class="history-toggle">▼ History</button>`;
+                // Update only the status part, preserve button and list
+                const header = item.querySelector(".location-header");
+                const button = header.querySelector(".history-toggle") || document.createElement("button");
+                if (!button.classList.contains("history-toggle")) {
+                    button.className = "history-toggle";
+                    button.textContent = "▼ History";
+                    header.appendChild(button);
+                }
+                header.firstChild.textContent = `${location}: ${statusText} `;
+                const span = header.querySelector("span") || document.createElement("span");
+                span.textContent = timeText;
+                if (!header.contains(span)) header.insertBefore(span, button);
             });
             attachHistoryListeners();
         })
@@ -81,14 +91,16 @@ function renderHistory(location, listElement) {
 function updateTimeAgo() {
     document.querySelectorAll(".history-list.visible").forEach(list => {
         const location = list.closest("[data-location]").dataset.location;
-        renderHistory(location, list); // Re-render to refresh "time ago"
+        renderHistory(location, list);
     });
 }
 
 // Function to toggle history visibility
 function attachHistoryListeners() {
+    console.log("Attaching history listeners...");
     document.querySelectorAll(".history-toggle").forEach(button => {
         button.addEventListener("click", () => {
+            console.log("History toggle clicked!");
             const list = button.parentElement.nextElementSibling;
             const isVisible = list.classList.contains("visible");
             list.classList.toggle("visible", !isVisible);
@@ -116,5 +128,5 @@ document.querySelectorAll(".power-on, .power-off").forEach(button => {
 // Initial render
 fetchAndRenderStatuses();
 
-// Auto-update "time ago" every minute
-setInterval(updateTimeAgo, 60000);
+// Auto-update "time ago" every 30s
+setInterval(updateTimeAgo, 30000);
