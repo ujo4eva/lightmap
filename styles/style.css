@@ -104,7 +104,7 @@ button {
     background: #fff;
     border: 1px solid #eee;
     border-radius: 3px;
-    overflow: hidden;
+    overflow: auto;
     max-height: 0; /* Start collapsed */
 }
 
