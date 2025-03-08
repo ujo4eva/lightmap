@@ -110,7 +110,7 @@ button {
 }
 
 .history-list.visible {
-    max-height: 200px; /* Adjust based on content; big enough for a few items */
+    max-height: 300px; /* Adjust based on content; big enough for a few items */
 }
 
 .history-list li {

@@ -28,18 +28,11 @@ function fetchAndRenderStatuses() {
                 const report = data[location] || { status: "Unknown", timestamp: null };
                 const statusText = report.status;
                 const timeText = report.timestamp ? `(Updated: ${new Date(report.timestamp).toLocaleTimeString()})` : "";
-                // Update only the status part, preserve button and list
                 const header = item.querySelector(".location-header");
-                const button = header.querySelector(".history-toggle") || document.createElement("button");
-                if (!button.classList.contains("history-toggle")) {
-                    button.className = "history-toggle";
-                    button.textContent = "▼ History";
-                    header.appendChild(button);
-                }
-                header.firstChild.textContent = `${location}: ${statusText} `;
-                const span = header.querySelector("span") || document.createElement("span");
+                // Preserve structure, update only text
+                header.childNodes[0].textContent = `${location}: ${statusText} `;
+                const span = header.querySelector("span") || header.appendChild(document.createElement("span"));
                 span.textContent = timeText;
-                if (!header.contains(span)) header.insertBefore(span, button);
             });
             attachHistoryListeners();
         })
@@ -63,6 +56,7 @@ function submitReport(location, status) {
 
 // Function to fetch and render history
 function renderHistory(location, listElement) {
+    console.log(`Fetching history for ${location}`);
     fetch(`${BASE_URL}/api/history/${encodeURIComponent(location)}`)
         .then(response => {
             if (!response.ok) throw new Error("Failed to fetch history");
@@ -102,6 +96,10 @@ function attachHistoryListeners() {
         button.addEventListener("click", () => {
             console.log("History toggle clicked!");
             const list = button.parentElement.nextElementSibling;
+            if (!list) {
+                console.error("No history list found for this button!");
+                return;
+            }
             const isVisible = list.classList.contains("visible");
             list.classList.toggle("visible", !isVisible);
             button.textContent = isVisible ? "▼ History" : "▲ History";
