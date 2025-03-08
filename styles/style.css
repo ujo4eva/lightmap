@@ -105,8 +105,7 @@ button {
     border: 1px solid #eee;
     border-radius: 3px;
     max-height: 0; /* Start collapsed */
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out; /* Smooth slide */
+    overflow: scroll;
 }
 
 .history-list.visible {
