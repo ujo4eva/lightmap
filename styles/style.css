@@ -104,8 +104,8 @@ button {
     background: #fff;
     border: 1px solid #eee;
     border-radius: 3px;
-    max-height: 0; /* Start collapsed */
     overflow-y: scroll;
+    max-height: 0; /* Start collapsed */
 }
 
 .history-list.visible {
