@@ -1,3 +1,7 @@
+import { injectSpeedInsights } from '@vercel/speed-insights';
+ 
+injectSpeedInsights();
+
 const BASE_URL = "";
 
 // Function to calculate "time ago" from a timestamp
