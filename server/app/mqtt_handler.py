@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 from .models import update_device, init_db
+from .config import BUILDING_NAMES
 import logging
 import time
 
@@ -34,13 +35,18 @@ def on_message(client, userdata, msg):
 
         topic_parts = topic.split("/")
         if len(topic_parts) >= 3:
-            device_id = topic_parts[-1]
-            if device_id in ("status", "online", "offline"):
+            last_part = topic_parts[-1]
+            if last_part in ("status", "online", "offline"):
                 device_id = topic_parts[-2]
+            else:
+                device_id = last_part
         else:
             device_id = topic
 
-        if "offline" in payload.lower():
+        is_offline_topic = topic.endswith("/offline")
+        is_offline_payload = "offline" in payload.lower()
+
+        if is_offline_topic or is_offline_payload:
             status = "OFF"
         else:
             status = "ON"
@@ -59,6 +65,8 @@ def on_message(client, userdata, msg):
                 elif part.startswith("IP:"):
                     ip = part.split(":")[1].strip()
 
+        building_name = BUILDING_NAMES.get(device_id, None)
+
         with _mqtt_app.app_context():
             update_device(
                 device_id=device_id,
@@ -66,10 +74,12 @@ def on_message(client, userdata, msg):
                 message=payload,
                 boot_count=boot_count,
                 ip=ip,
+                building_name=building_name,
             )
             _mqtt_app.broadcaster.broadcast("status_update", {"device_id": device_id})
 
-        logger.info(f"✅ Updated device {device_id} → {status}")
+        status_str = "⚡ ON" if status == "ON" else "❌ OFF"
+        logger.info(f"✅ Updated device {device_id} → {status_str}")
 
     except Exception as e:
         logger.error(f"Error processing MQTT message: {e}")
@@ -92,7 +102,9 @@ def start_mqtt_client(app):
 
     while True:
         try:
-            client = mqtt.Client(client_id=mqtt_client_id)
+            client = mqtt.Client(
+                mqtt.CallbackAPIVersion.APIv2, client_id=mqtt_client_id
+            )
             client.on_connect = lambda c, u, f, rc: on_connect(
                 c, u, f, rc, topic=mqtt_topic
             )

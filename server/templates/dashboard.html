@@ -6,90 +6,265 @@
     <title>LightMap - Campus Power Monitor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .status-on { background-color: #198754; color: white; }
-        .status-off { background-color: #dc3545; color: white; }
-        .status-unknown { background-color: #6c757d; color: white; }
-        .device-card { transition: all 0.3s ease; }
-        .device-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .last-seen { font-size: 0.8rem; color: #6c757d; }
-        .connection-status { font-size: 0.9rem; }
+        body { background-color: #f8f9fa; }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online .status-indicator { background-color: #28a745; box-shadow: 0 0 8px #28a745; }
+        .status-offline .status-indicator { background-color: #dc3545; box-shadow: 0 0 8px #dc3545; }
+        .status-stale .status-indicator { background-color: #ffc107; box-shadow: 0 0 8px #ffc107; }
+        .device-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease, transform 0.2s ease;
+            overflow: hidden;
+        }
+        .device-card:hover { transform: translateY(-4px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+        .device-card.status-online { border-left: 4px solid #28a745; }
+        .device-card.status-offline { border-left: 4px solid #dc3545; }
+        .device-card.status-stale { border-left: 4px solid #ffc107; }
+        .card-header-online { background-color: #d4edda; }
+        .card-header-offline { background-color: #f8d7da; }
+        .card-header-stale { background-color: #fff3cd; }
+        .card-body-dark { background-color: #fff; }
+        .last-seen { font-size: 0.85rem; }
+        .device-ip { font-size: 0.8rem; color: #6c757d; font-family: monospace; }
+        .boot-count { font-size: 0.75rem; color: #6c757d; }
+        .connection-badge { font-size: 0.85rem; }
+        .status-change-flash {
+            animation: flash 1s ease-in-out 3;
+        }
+        @keyframes flash {
+            0%, 100% { background-color: inherit; }
+            50% { background-color: rgba(255, 193, 7, 0.3); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state svg { width: 80px; height: 80px; opacity: 0.5; }
+        .refresh-btn { cursor: pointer; }
     </style>
 </head>
-<body class="bg-light">
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-lightning-charge me-2" viewBox="0 0 16 16">
+                    <path d="M11.251.323a2.25 2.25 0 0 1 2.45 0l5.518 9.371A2.25 2.25 0 0 1 17.87 13.5H8.13a2.25 2.25 0 0 1-2.101-3.848L11.251.323z"/>
+                    <path d="M5.304 9.37A2.25 2.25 0 0 1 7.53 8h1.94a2.25 2.25 0 0 1 2.226 1.632l-1.26 2.76a2.25 2.25 0 0 1-2.101 1.048H6.18a2.25 2.25 0 0 0-2.007.965l-3.173 5.49a2.25 2.25 0 0 0 2.135 3.235h2.675a2.25 2.25 0 0 0 2.228-1.692l.5-1.5a2.25 2.25 0 0 1 2.228-1.692h.72a.75.75 0 0 1 0 1.5H6.18a.75.75 0 0 0-.658 1.128l1.26 2.76a.75.75 0 0 0 .744.546h.72a2.25 2.25 0 0 0 2.228-1.692l-.5-1.5a2.25 2.25 0 0 1 2.135-3.235h.675a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 1-2.228 1.692h-2.675a2.25 2.25 0 0 1-2.135-3.235l3.173-5.49a.75.75 0 0 0-.658-1.128H5.304a.75.75 0 0 1 0-1.5h1.94a.75.75 0 0 1 .658 1.128l-1.26 2.76a2.25 2.25 0 0 1-2.101 1.048H2.47a.75.75 0 0 0-.658 1.128l1.26 2.76a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 0 1.5h-.72a2.25 2.25 0 0 0-2.228 1.692l.5 1.5a2.25 2.25 0 0 0 2.228 1.692h.72a.75.75 0 0 1 Map - Campus Power Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f6f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-online .status-dot { background: #10b981; box-shadow: 0 0 6px #10b981; }
+        .status-offline .status-dot { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+        .status-stale .status-dot { background: #f59e0b; box-shadow: 0 0 6px #f59e0b; }
+        .device-card {
+            border: none; border-radius: 16px; overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .device-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .card-header { padding: 12px 16px; font-weight: 600; }
+        .card-header.status-online { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .card-header.status-offline { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .card-header.status-stale { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .card-body { padding: 16px; background: white; }
+        .building-name { font-size: 1.1rem; font-weight: 600; color: #1f2937; margin-bottom: 8px; }
+        .device-id { font-size: 0.8rem; color: #6b7280; font-family: monospace; }
+        .info-row { font-size: 0.85rem; color: #4b5563; margin-bottom: 4px; }
+        .info-label { color: #9ca3af; margin-right: 4px; }
+        .info-value { font-weight: 500; }
+        .timestamp { font-size: 0.8rem; color: #6b7280; margin-top: 8px; }
+        .status-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; }
+        .status-badge.online { background: #d1fae5; color: #065f46; }
+        .status-badge.offline { background: #fee2e2; color: #991b1b; }
+        .status-badge.stale { background: #fef3c7; color: #92400e; }
+        .connection-status { font-size: 0.8rem; }
+        .connection-badge { font-size: 0.75rem; padding: 4px 8px; }
+        .controls { background: white; border-radius: 12px; padding: 12px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .refresh-btn { cursor: pointer; transition: transform 0.1s; }
+        .refresh-btn:hover { transform: rotate(180deg); }
+        .refresh-btn:active { transform: rotate(360deg); }
+        .auto-refresh-toggle { cursor: pointer; }
+        .empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; }
+        .empty-state svg { width: 100px; height: 100px; opacity: 0.3; margin-bottom: 16px; }
+        .status-changed { animation: statusFlash 1s ease-in-out; }
+        @keyframes statusFlash {
+            0%, 100% { box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+            50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-lightning-charge me-2" viewBox="0 0 16 16">
+                    <path d="M11.251.323a2.25 2.25 0 0 1 2.45 0l5.518 9.371A2.25 2.25 0 0 1 17.87 13.5H8.13a2.25 2.25 0 0 1-2.101-3.848L11.251.323z"/>
+                </svg>
+                LightMap
+            </a>
+            <div class="connection-status text-white-50">
+                <span id="connectionIndicator" class="badge bg-secondary connection-badge">Connecting...</span>
+            </div>
+        </div>
+    </nav>
+
     <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Campus Power Monitor</h1>
-            <div class="connection-status">
-                <span id="connectionIndicator" class="badge bg-secondary">Connecting...</span>
+        <div class="controls d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <button id="refreshBtn" class="btn btn-outline-primary btn-sm refresh-btn" title="Refresh">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                        <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5.002 5.002 0 0 0 8 3zM3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.1z"/>
+                    </svg>
+                </button>
+                <span class="text-muted small">Last update: <span id="lastUpdate">Never</span></span>
+            </div>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="autoRefresh" checked>
+                <label class="form-check-label text-muted small auto-refresh-toggle" for="autoRefresh">Auto-refresh on updates</label>
             </div>
         </div>
 
         <div id="devices" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-            <div class="col">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <p class="card-text text-muted">No devices found</p>
-                    </div>
-                </div>
+            <div class="col-12 empty-state">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                <p class="mb-0">No devices connected</p>
+                <p class="small">Waiting for ESP32 heartbeats...</p>
             </div>
         </div>
     </div>
 
     <script>
         const devices = {};
+        let autoRefresh = true;
+        let lastUpdateTime = null;
 
-        function formatTimestamp(ts) {
+        function formatRelativeTime(ts) {
             if (!ts) return 'Never';
             const date = new Date(ts);
             const now = new Date();
             const diff = Math.floor((now - date) / 1000);
-
-            if (diff < 60) return 'Just now';
+            if (diff < 5) return 'Just now';
+            if (diff < 60) return `${diff}s ago`;
             if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
             if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
             return date.toLocaleDateString();
         }
 
+        function formatLocalTime(ts) {
+            if (!ts) return '-';
+            const date = new Date(ts);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
         function getStatusClass(status) {
-            return status === 'ON' ? 'status-on' : 'status-off';
+            if (status === 'ON') return 'status-online';
+            if (status === 'OFF') {
+                const device = Object.values(devices).find(d => d.last_status === 'OFF');
+                if (device) {
+                    const lastSeen = new Date(device.last_timestamp);
+                    const now = new Date();
+                    const diffMinutes = (now - lastSeen) / 60000;
+                    if (diffMinutes > 5) return 'status-offline';
+                }
+                return 'status-offline';
+            }
+            return 'status-stale';
         }
 
         function getStatusText(status) {
-            return status === 'ON' ? 'Online' : 'Offline';
+            if (status === 'ON') return 'Online';
+            return 'Offline';
         }
 
-        function createDeviceCard(device) {
+        function getCardClass(status) {
+            if (status === 'ON') return 'card-header status-online';
+            return 'card-header status-offline';
+        }
+
+        function createDeviceCard(device, isUpdate = false) {
             const existingCard = document.getElementById(`device-${device.device_id}`);
+            const previousStatus = existingCard ? devices[device.device_id]?.last_status : null;
+            
             if (existingCard) {
-                existingCard.className = `col device-card ${getStatusClass(device.last_status)}`;
-                existingCard.querySelector('.status-badge').className = `badge ${device.last_status === 'ON' ? 'bg-success' : 'bg-danger'}`;
-                existingCard.querySelector('.status-badge').textContent = getStatusText(device.last_status);
-                existingCard.querySelector('.device-name').textContent = device.building_name;
+                const header = existingCard.querySelector('.card-header');
+                const newStatus = device.last_status;
+                const statusClass = getStatusClass(newStatus);
+                
+                header.className = getCardClass(newStatus);
+                existingCard.className = `col device-card ${statusClass}`;
+                existingCard.querySelector('.status-badge').className = `badge status-badge ${newStatus === 'ON' ? 'online' : 'offline'}`;
+                existingCard.querySelector('.status-badge').textContent = getStatusText(newStatus);
+                existingCard.querySelector('.building-name').textContent = device.building_name;
                 existingCard.querySelector('.device-id').textContent = device.device_id;
-                existingCard.querySelector('.last-seen').textContent = `Last seen: ${formatTimestamp(device.last_timestamp)}`;
+                existingCard.querySelector('.relative-time').textContent = formatRelativeTime(device.last_timestamp);
+                existingCard.querySelector('.local-time').textContent = formatLocalTime(device.last_timestamp);
+                
+                const ipEl = existingCard.querySelector('.device-ip');
                 if (device.last_ip) {
-                    existingCard.querySelector('.device-ip').textContent = `IP: ${device.last_ip}`;
-                    existingCard.querySelector('.device-ip').style.display = '';
+                    ipEl.textContent = device.last_ip;
+                    ipEl.parentElement.style.display = '';
+                } else {
+                    ipEl.parentElement.style.display = 'none';
                 }
+                
+                const bootsEl = existingCard.querySelector('.device-boots');
                 if (device.boot_count !== null) {
-                    existingCard.querySelector('.device-boots').textContent = `Boots: ${device.boot_count}`;
-                    existingCard.querySelector('.device-boots').style.display = '';
+                    bootsEl.textContent = `Boot #${device.boot_count}`;
+                    bootsEl.parentElement.style.display = '';
+                } else {
+                    bootsEl.parentElement.style.display = 'none';
+                }
+
+                if (isUpdate && previousStatus !== newStatus) {
+                    existingCard.classList.add('status-changed');
+                    setTimeout(() => existingCard.classList.remove('status-changed'), 1000);
                 }
             } else {
+                const statusClass = getStatusClass(device.last_status);
                 const col = document.createElement('div');
                 col.id = `device-${device.device_id}`;
-                col.className = `col device-card ${getStatusClass(device.last_status)}`;
+                col.className = `col device-card ${statusClass}`;
                 col.innerHTML = `
                     <div class="card h-100">
-                        <div class="card-body text-center">
-                            <span class="badge ${device.last_status === 'ON' ? 'bg-success' : 'bg-danger'} status-badge">${getStatusText(device.last_status)}</span>
-                            <h5 class="card-title mt-2 device-name">${device.building_name}</h5>
-                            <p class="card-text">
-                                <small class="text-muted device-id">${device.device_id}</small>
-                            </p>
-                            <p class="last-seen">Last seen: ${formatTimestamp(device.last_timestamp)}</p>
-                            ${device.last_ip ? `<p class="mb-0"><small class="device-ip">IP: ${device.last_ip}</small></p>` : ''}
-                            ${device.boot_count !== null ? `<p class="mb-0"><small class="device-boots">Boots: ${device.boot_count}</small></p>` : ''}
+                        <div class="${getCardClass(device.last_status)} d-flex justify-content-between align-items-center">
+                            <span class="d-flex align-items-center">
+                                <span class="status-dot"></span>
+                                <span class="status-badge ${device.last_status === 'ON' ? 'online' : 'offline'}">${getStatusText(device.last_status)}</span>
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="building-name">${device.building_name}</div>
+                            <div class="device-id">${device.device_id}</div>
+                            <hr style="margin: 8px 0; opacity: 0.1;">
+                            <div class="info-row">
+                                <span class="info-label">Last seen:</span>
+                                <span class="info-value relative-time">${formatRelativeTime(device.last_timestamp)}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">At:</span>
+                                <span class="info-value local-time">${formatLocalTime(device.last_timestamp)}</span>
+                            </div>
+                            <div class="info-row" style="display: ${device.last_ip ? '' : 'none'}">
+                                <span class="info-label">IP:</span>
+                                <span class="info-value device-ip">${device.last_ip || ''}</span>
+                            </div>
+                            <div class="info-row" style="display: ${device.boot_count !== null ? '' : 'none'}">
+                                <span class="info-label">Boot:</span>
+                                <span class="info-value device-boots">#${device.boot_count || ''}</span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -98,12 +273,17 @@
             devices[device.device_id] = device;
         }
 
-        async function refreshDevices() {
+        async function refreshDevices(showIndicator = false) {
             try {
                 const response = await fetch('/status');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
+                
                 document.getElementById('devices').innerHTML = '';
-                data.forEach(createDeviceCard);
+                data.forEach(d => createDeviceCard(d, showIndicator));
+                
+                lastUpdateTime = new Date();
+                document.getElementById('lastUpdate').textContent = formatLocalTime(lastUpdateTime.toISOString());
             } catch (error) {
                 console.error('Failed to fetch devices:', error);
             }
@@ -114,43 +294,62 @@
             const eventSource = new EventSource('/events');
 
             eventSource.addEventListener('init', (event) => {
-                const devices_list = JSON.parse(event.data);
+                const devicesList = JSON.parse(event.data);
                 document.getElementById('devices').innerHTML = '';
-                devices_list.forEach(createDeviceCard);
-                indicator.className = 'badge bg-success';
+                devicesList.forEach(d => createDeviceCard(d));
+                indicator.className = 'badge bg-success connection-badge';
                 indicator.textContent = 'Connected';
             });
 
             eventSource.addEventListener('status_update', async (event) => {
-                await refreshDevices();
+                const data = JSON.parse(event.data);
+                if (autoRefresh) {
+                    await refreshDevices(true);
+                } else {
+                    const response = await fetch('/status');
+                    const devicesList = await response.json();
+                    const device = devicesList.find(d => d.device_id === data.device_id);
+                    if (device) createDeviceCard(device, true);
+                }
+                lastUpdateTime = new Date();
+                document.getElementById('lastUpdate').textContent = formatLocalTime(lastUpdateTime.toISOString());
             });
 
             eventSource.addEventListener('ping', () => {
-                indicator.className = 'badge bg-success';
+                indicator.className = 'badge bg-success connection-badge';
                 indicator.textContent = 'Connected';
             });
 
             eventSource.onerror = () => {
-                indicator.className = 'badge bg-danger';
+                indicator.className = 'badge bg-danger connection-badge';
                 indicator.textContent = 'Reconnecting...';
                 eventSource.close();
                 setTimeout(connectSSE, 3000);
             };
 
             eventSource.onopen = () => {
-                indicator.className = 'badge bg-success';
+                indicator.className = 'badge bg-success connection-badge';
                 indicator.textContent = 'Connected';
             };
         }
 
+        document.getElementById('refreshBtn').addEventListener('click', () => refreshDevices(false));
+        
+        document.getElementById('autoRefresh').addEventListener('change', (e) => {
+            autoRefresh = e.target.checked;
+        });
+
         setInterval(() => {
-            document.querySelectorAll('.last-seen').forEach(el => {
+            document.querySelectorAll('.relative-time').forEach(el => {
                 const deviceId = el.closest('.device-card').id.replace('device-', '');
                 if (devices[deviceId]) {
-                    el.textContent = `Last seen: ${formatTimestamp(devices[deviceId].last_timestamp)}`;
+                    el.textContent = formatRelativeTime(devices[deviceId].last_timestamp);
                 }
             });
-        }, 10000);
+            if (lastUpdateTime) {
+                document.getElementById('lastUpdate').textContent = formatLocalTime(lastUpdateTime.toISOString());
+            }
+        }, 5000);
 
         connectSSE();
     </script>

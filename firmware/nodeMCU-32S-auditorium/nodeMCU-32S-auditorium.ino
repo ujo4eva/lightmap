@@ -9,8 +9,9 @@ const char* mqtt_server   = "broker.emqx.io";
 const int   mqtt_port     = 1883;
 const char* mqtt_clientId = "esp32-auditorium-001";
 const char* topic_status  = "campus/power/esp32-001/status";
+const char* topic_offline = "campus/power/esp32-001/offline";
 
-const uint64_t sleepTime_us = 5 * 60 * 1000000ULL;  // Back to 5 minutes
+const uint64_t sleepTime_us = 5 * 60 * 1000000ULL;  // 5 minutes
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -26,27 +27,30 @@ void setup() {
   pinMode(2, OUTPUT);
   digitalWrite(2, HIGH);  // LED OFF initially
 
-  // WiFi connection with cleaner output and reasonable timeout
+  // WiFi connection
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
   unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < 12000) {  // 12s max
+  while (WiFi.status() != WL_CONNECTED && millis() - start < 12000) {
     delay(500);
     Serial.print(".");
   }
-  Serial.println();  // New line after dots
+  Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("WiFi connected. IP: " + WiFi.localIP().toString());
-    digitalWrite(2, LOW);  // Blue LED ON = WiFi good (temporary)
+    digitalWrite(2, LOW);  // Blue LED ON = WiFi good
   } else {
     Serial.println("WiFi failed after timeout. Sleeping...");
     digitalWrite(2, HIGH);
     esp_deep_sleep_start();
   }
 
-  // MQTT
+  // MQTT with LWT (Last Will and Testament)
   client.setServer(mqtt_server, mqtt_port);
+  
+  // Configure LWT - broker will publish "offline" if client disconnects unexpectedly
+  client.setWill(topic_offline, "offline", 1, true);  // retained=true so new subscribers get the last state
 
   int retries = 0;
   bool mqttConnected = false;
@@ -64,12 +68,13 @@ void setup() {
   }
 
   if (mqttConnected) {
-    String msg = "online | boot:" + String(bootCount) + " | IP:" + WiFi.localIP().toString();
-    bool pubSuccess = client.publish(topic_status, msg.c_str());
-    Serial.println(pubSuccess ? "Published: " + msg : "Publish FAILED!");
-
+    // First, clear any previous offline state by publishing online
+    String onlineMsg = "online | boot:" + String(bootCount) + " | IP:" + WiFi.localIP().toString();
+    client.publish(topic_status, onlineMsg.c_str(), true);  // retained=true
+    Serial.println("Published: " + onlineMsg);
+    
     client.loop();
-    delay(800);           // Critical delay for reliable transmission
+    delay(800);
     digitalWrite(2, LOW); // Blue LED ON = full success
   } else {
     Serial.println("MQTT failed after retries.");

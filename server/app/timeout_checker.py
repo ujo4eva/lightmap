@@ -1,7 +1,7 @@
 import time
 import threading
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .models import get_db_context
 
 logger = logging.getLogger(__name__)
@@ -17,8 +17,10 @@ def start_timeout_checker(app):
                 with app.app_context():
                     with get_db_context() as conn:
                         cutoff = (
-                            datetime.utcnow() - timedelta(seconds=timeout)
-                        ).isoformat()
+                            (datetime.now(timezone.utc) - timedelta(seconds=timeout))
+                            .isoformat()
+                            .replace("+00:00", "Z")
+                        )
 
                         conn.execute(
                             """

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import sqlite3
 from flask import current_app
 from contextlib import contextmanager
@@ -39,21 +39,37 @@ def init_db():
 
 
 def update_device(
-    device_id: str, status: str, message: str, boot_count: int = None, ip: str = None
+    device_id: str,
+    status: str,
+    message: str,
+    boot_count: int = None,
+    ip: str = None,
+    building_name: str = None,
 ):
     with get_db_context() as conn:
-        now = datetime.utcnow().isoformat()
-        building_name = (
-            device_id.replace("esp32-", "")
-            .replace("-status", "")
-            .replace("-", " ")
-            .title()
-        )
+        now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+        if building_name is None:
+            building_name = (
+                device_id.replace("esp32-", "")
+                .replace("-status", "")
+                .replace("-", " ")
+                .title()
+            )
+
+        existing = conn.execute(
+            "SELECT building_name FROM devices WHERE device_id = ?", (device_id,)
+        ).fetchone()
+
+        if existing and existing["building_name"] and building_name is None:
+            building_name = existing["building_name"]
+
         conn.execute(
             """
             INSERT INTO devices (device_id, building_name, last_status, last_timestamp, last_message, boot_count, last_ip)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(device_id) DO UPDATE SET
+                building_name = COALESCE(excluded.building_name, building_name),
                 last_status = excluded.last_status,
                 last_timestamp = excluded.last_timestamp,
                 last_message = excluded.last_message,
