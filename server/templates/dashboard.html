@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LightMap - Campus Power Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .status-on { background-color: #198754; color: white; }
+        .status-off { background-color: #dc3545; color: white; }
+        .status-unknown { background-color: #6c757d; color: white; }
+        .device-card { transition: all 0.3s ease; }
+        .device-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .last-seen { font-size: 0.8rem; color: #6c757d; }
+        .connection-status { font-size: 0.9rem; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Campus Power Monitor</h1>
+            <div class="connection-status">
+                <span id="connectionIndicator" class="badge bg-secondary">Connecting...</span>
+            </div>
+        </div>
+
+        <div id="devices" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <p class="card-text text-muted">No devices found</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const devices = {};
+
+        function formatTimestamp(ts) {
+            if (!ts) return 'Never';
+            const date = new Date(ts);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        function getStatusClass(status) {
+            return status === 'ON' ? 'status-on' : 'status-off';
+        }
+
+        function getStatusText(status) {
+            return status === 'ON' ? 'Online' : 'Offline';
+        }
+
+        function createDeviceCard(device) {
+            const existingCard = document.getElementById(`device-${device.device_id}`);
+            if (existingCard) {
+                existingCard.className = `col device-card ${getStatusClass(device.last_status)}`;
+                existingCard.querySelector('.status-badge').className = `badge ${device.last_status === 'ON' ? 'bg-success' : 'bg-danger'}`;
+                existingCard.querySelector('.status-badge').textContent = getStatusText(device.last_status);
+                existingCard.querySelector('.device-name').textContent = device.building_name;
+                existingCard.querySelector('.device-id').textContent = device.device_id;
+                existingCard.querySelector('.last-seen').textContent = `Last seen: ${formatTimestamp(device.last_timestamp)}`;
+                if (device.last_ip) {
+                    existingCard.querySelector('.device-ip').textContent = `IP: ${device.last_ip}`;
+                    existingCard.querySelector('.device-ip').style.display = '';
+                }
+                if (device.boot_count !== null) {
+                    existingCard.querySelector('.device-boots').textContent = `Boots: ${device.boot_count}`;
+                    existingCard.querySelector('.device-boots').style.display = '';
+                }
+            } else {
+                const col = document.createElement('div');
+                col.id = `device-${device.device_id}`;
+                col.className = `col device-card ${getStatusClass(device.last_status)}`;
+                col.innerHTML = `
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <span class="badge ${device.last_status === 'ON' ? 'bg-success' : 'bg-danger'} status-badge">${getStatusText(device.last_status)}</span>
+                            <h5 class="card-title mt-2 device-name">${device.building_name}</h5>
+                            <p class="card-text">
+                                <small class="text-muted device-id">${device.device_id}</small>
+                            </p>
+                            <p class="last-seen">Last seen: ${formatTimestamp(device.last_timestamp)}</p>
+                            ${device.last_ip ? `<p class="mb-0"><small class="device-ip">IP: ${device.last_ip}</small></p>` : ''}
+                            ${device.boot_count !== null ? `<p class="mb-0"><small class="device-boots">Boots: ${device.boot_count}</small></p>` : ''}
+                        </div>
+                    </div>
+                `;
+                document.getElementById('devices').appendChild(col);
+            }
+            devices[device.device_id] = device;
+        }
+
+        async function refreshDevices() {
+            try {
+                const response = await fetch('/status');
+                const data = await response.json();
+                document.getElementById('devices').innerHTML = '';
+                data.forEach(createDeviceCard);
+            } catch (error) {
+                console.error('Failed to fetch devices:', error);
+            }
+        }
+
+        function connectSSE() {
+            const indicator = document.getElementById('connectionIndicator');
+            const eventSource = new EventSource('/events');
+
+            eventSource.addEventListener('init', (event) => {
+                const devices_list = JSON.parse(event.data);
+                document.getElementById('devices').innerHTML = '';
+                devices_list.forEach(createDeviceCard);
+                indicator.className = 'badge bg-success';
+                indicator.textContent = 'Connected';
+            });
+
+            eventSource.addEventListener('status_update', async (event) => {
+                await refreshDevices();
+            });
+
+            eventSource.addEventListener('ping', () => {
+                indicator.className = 'badge bg-success';
+                indicator.textContent = 'Connected';
+            });
+
+            eventSource.onerror = () => {
+                indicator.className = 'badge bg-danger';
+                indicator.textContent = 'Reconnecting...';
+                eventSource.close();
+                setTimeout(connectSSE, 3000);
+            };
+
+            eventSource.onopen = () => {
+                indicator.className = 'badge bg-success';
+                indicator.textContent = 'Connected';
+            };
+        }
+
+        setInterval(() => {
+            document.querySelectorAll('.last-seen').forEach(el => {
+                const deviceId = el.closest('.device-card').id.replace('device-', '');
+                if (devices[deviceId]) {
+                    el.textContent = `Last seen: ${formatTimestamp(devices[deviceId].last_timestamp)}`;
+                }
+            });
+        }, 10000);
+
+        connectSSE();
+    </script>
+</body>
+</html>
