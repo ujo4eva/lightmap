@@ -49,20 +49,20 @@ def update_device(
     with get_db_context() as conn:
         now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-        if building_name is None:
-            building_name = (
-                device_id.replace("esp32-", "")
-                .replace("-status", "")
-                .replace("-", " ")
-                .title()
-            )
-
         existing = conn.execute(
             "SELECT building_name FROM devices WHERE device_id = ?", (device_id,)
         ).fetchone()
 
-        if existing and existing["building_name"] and building_name is None:
-            building_name = existing["building_name"]
+        if building_name is None:
+            if existing and existing["building_name"]:
+                building_name = existing["building_name"]
+            else:
+                building_name = (
+                    device_id.replace("esp32-", "")
+                    .replace("-status", "")
+                    .replace("-", " ")
+                    .title()
+                )
 
         conn.execute(
             """

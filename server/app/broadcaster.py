@@ -4,7 +4,6 @@ import queue
 
 class EventBroadcaster:
     def __init__(self):
-        self._queue = queue.Queue()
         self._client_queues = []
         self._lock = threading.Lock()
 

@@ -54,15 +54,20 @@ BUILDING_NAMES = {
 
 ```
 lightmap/
-├── firmware/           # ESP32 Arduino sketches
+├── firmware/                    # ESP32 Arduino sketches
 │   └── nodeMCU-32S-auditorium/
-└── server/             # Flask backend
+└── server/                     # Flask backend
     ├── app/
-    │   ├── __init__.py
-    │   ├── broadcaster.py    # SSE event broadcasting
-    │   ├── mqtt_handler.py # MQTT subscriber
-    │   ├── timeout_checker.py
-    │   └── ...
-    └── templates/
-        └── dashboard.html
+    │   ├── __init__.py         # App factory
+    │   ├── broadcaster.py      # SSE event broadcasting
+    │   ├── config.py           # Configuration & device names
+    │   ├── mqtt_handler.py     # MQTT subscriber
+    │   ├── models.py           # Database operations
+    │   ├── routes.py           # API endpoints
+    │   ├── timeout_checker.py  # Auto-offline detection
+    │   └── utils.py            # Utilities
+    ├── templates/
+    │   └── dashboard.html      # Real-time dashboard UI
+    ├── instance/              # SQLite database
+    └── run.py                 # Server entry point
 ```

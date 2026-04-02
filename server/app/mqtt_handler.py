@@ -8,19 +8,10 @@ logger = logging.getLogger(__name__)
 _mqtt_app = None
 
 
-def on_connect(client, userdata, flags, rc, topic=None):
-    if rc == 0:
-        logger.info("✅ Connected to MQTT broker")
-        client.subscribe(topic)
-        logger.info(f"Subscribed to {topic}")
-    else:
-        logger.error(f"❌ MQTT connection failed with code {rc}")
-
-
-def on_disconnect(client, userdata, rc):
-    if rc != 0:
+def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    if reason_code != 0:
         logger.warning(
-            f"⚠️ Disconnected from MQTT broker (code {rc}), attempting reconnect..."
+            f"⚠️ Disconnected from MQTT broker (code {reason_code}), attempting reconnect..."
         )
     else:
         logger.info("Disconnected from MQTT broker")
@@ -100,14 +91,21 @@ def start_mqtt_client(app):
     reconnect_delay = 5
     max_reconnect_delay = 60
 
+    def on_connect_wrapper(client, userdata, connect_flags, reason_code, properties):
+        if reason_code == 0:
+            logger.info("✅ Connected to MQTT broker")
+            client.subscribe(mqtt_topic)
+            logger.info(f"Subscribed to {mqtt_topic}")
+        else:
+            logger.error(f"❌ MQTT connection failed with code {reason_code}")
+
     while True:
         try:
             client = mqtt.Client(
-                mqtt.CallbackAPIVersion.APIv2, client_id=mqtt_client_id
+                callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
+                client_id=mqtt_client_id,
             )
-            client.on_connect = lambda c, u, f, rc: on_connect(
-                c, u, f, rc, topic=mqtt_topic
-            )
+            client.on_connect = on_connect_wrapper
             client.on_disconnect = on_disconnect
             client.on_message = on_message
 
