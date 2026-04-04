@@ -10,11 +10,14 @@ BUILDING_NAMES = {
 }
 
 
+def _get_default_db_path():
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return f"sqlite:///{os.path.join(base_dir, 'instance', 'power_monitor.db')}"
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", "sqlite:///instance/power_monitor.db"
-    )
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL") or _get_default_db_path()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # MQTT Configuration (defaults work for development, override in production)

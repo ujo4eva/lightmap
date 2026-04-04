@@ -12,6 +12,8 @@ RUN uv sync --no-dev
 
 COPY server/ ./server/
 
+RUN mkdir -p /app/server/instance
+
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=server/run.py
 
