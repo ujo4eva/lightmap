@@ -1,6 +1,6 @@
 import json
 from flask import Blueprint, render_template, Response, jsonify, current_app
-from .models import get_all_devices
+from .models import get_all_devices, get_db_context
 
 bp = Blueprint("main", __name__)
 
@@ -8,6 +8,16 @@ bp = Blueprint("main", __name__)
 @bp.route("/")
 def dashboard():
     return render_template("dashboard.html")
+
+
+@bp.route("/health")
+def health():
+    try:
+        with get_db_context() as conn:
+            conn.execute("SELECT 1")
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @bp.route("/status")
