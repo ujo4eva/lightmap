@@ -4,15 +4,23 @@ IoT system for monitoring power status of campus buildings using ESP32 devices.
 
 ## Quick Start
 
-### 1. Flash ESP32 Firmware
+### Option 1: Docker (Recommended)
 ```bash
-# Edit wifi credentials in firmware/nodeMCU-32S-auditorium/nodeMCU-32S-auditorium.ino
-# Upload using Arduino IDE or PlatformIO
+# Build and run
+docker build -t lightmap .
+docker run -d -p 5000:5000 lightmap
+
+# Or with volume for persistent data
+docker run -d -p 5000:5000 -v $(pwd)/server/instance:/app/server/instance lightmap
 ```
 
-### 2. Start the Server
+### Option 2: Direct Installation
 ```bash
+# Install dependencies
 cd server
+uv sync
+
+# Run the server
 uv run python run.py
 ```
 

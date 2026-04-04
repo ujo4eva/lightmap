@@ -31,16 +31,12 @@ Server runs on `http://0.0.0.0:5000`
 
 ### Option 1: Standalone Server
 
-#### 1. Install Production WSGI Server
+#### 1. Run with Gunicorn
+
+Gunicorn is already included in dependencies:
 
 ```bash
 cd server
-uv add gunicorn
-```
-
-#### 2. Run with Gunicorn
-
-```bash
 uv run gunicorn -w 4 -b 127.0.0.1:5000 "app:create_app()"
 ```
 
@@ -72,25 +68,31 @@ server {
 
 ### Option 2: Docker Container
 
-#### 1. Create Dockerfile
+A Dockerfile is provided at the project root.
 
-```dockerfile
-FROM python:3.12-slim
-
-WORKDIR /app
-COPY server/ /app/
-RUN pip install uv && uv sync
-
-EXPOSE 5000
-
-CMD ["uv", "run", "gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:create_app()"]
-```
-
-#### 2. Build and Run
+#### 1. Build
 
 ```bash
 docker build -t lightmap .
-docker run -d -p 5000:5000 -v $(pwd)/server/instance:/app/instance lightmap
+```
+
+#### 2. Run
+
+```bash
+# Basic run (database is ephemeral)
+docker run -d -p 5000:5000 lightmap
+
+# With persistent database volume
+docker run -d -p 5000:5000 -v $(pwd)/server/instance:/app/server/instance lightmap
+```
+
+#### 3. Environment Variables
+
+```bash
+docker run -d -p 5000:5000 \
+  -e MQTT_BROKER=broker.emqx.io \
+  -e SECRET_KEY=your-secret-key \
+  lightmap
 ```
 
 ### Option 3: Systemd Service
@@ -180,18 +182,15 @@ journalctl -u lightmap -f
 
 ### Health Check Endpoint
 
-Create `server/app/routes.py` addition:
-
-```python
-@bp.route("/health")
-def health():
-    return {"status": "ok"}
-```
-
-Then query:
+The server includes a built-in health check endpoint:
 
 ```bash
 curl http://localhost:5000/health
+```
+
+Response:
+```json
+{"status": "ok"}
 ```
 
 ---
