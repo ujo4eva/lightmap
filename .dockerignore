@@ -10,6 +10,9 @@ docs/
 .vscode/
 .idea/
 
+# Hardware/firmware (not needed for server container)
+firmware/
+
 # Python
 __pycache__/
 *.pyc
