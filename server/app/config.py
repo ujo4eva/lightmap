@@ -12,7 +12,9 @@ BUILDING_NAMES = {
 
 def _get_default_db_path():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    return f"sqlite:///{os.path.join(base_dir, 'instance', 'power_monitor.db')}"
+    instance_dir = os.path.join(base_dir, "instance")
+    os.makedirs(instance_dir, exist_ok=True)
+    return f"sqlite:///{os.path.join(instance_dir, 'power_monitor.db')}"
 
 
 class Config:
