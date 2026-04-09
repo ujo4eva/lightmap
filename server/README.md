@@ -14,7 +14,21 @@ uv run python run.py
 
 ## Configuration
 
-Edit `app/config.py`:
+Configuration can be set via environment variables or by editing `app/config.py`:
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MQTT_BROKER` | broker.emqx.io | MQTT broker hostname |
+| `MQTT_PORT` | 1883 | MQTT broker port |
+| `MQTT_CLIENT_ID` | lightmap-server | MQTT client ID |
+| `MQTT_TOPIC` | campus/power/# | MQTT topic subscription |
+| `STATUS_TIMEOUT_SECONDS` | 600 | Seconds before marking device offline |
+| `SECRET_KEY` | auto-generated | Flask secret key |
+| `DATABASE_URL` | sqlite://... | Database connection string |
+
+### config.py
 
 ```python
 # MQTT Settings
@@ -29,7 +43,7 @@ BUILDING_NAMES = {
 }
 
 # Offline timeout (seconds)
-STATUS_TIMEOUT_SECONDS = 10 * 60  # 10 minutes
+STATUS_TIMEOUT_SECONDS = 600  # 10 minutes
 ```
 
 ## API Endpoints
@@ -37,6 +51,7 @@ STATUS_TIMEOUT_SECONDS = 10 * 60  # 10 minutes
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/` | GET | Dashboard web page |
+| `/health` | GET | Health check (for containers/orchestration) |
 | `/status` | GET | JSON list of all devices |
 | `/events` | GET | SSE stream for real-time updates |
 

@@ -80,7 +80,6 @@ def update_device(
         )
         conn.commit()
 
-
 def get_all_devices() -> list[dict]:
     with get_db_context() as conn:
         rows = conn.execute("SELECT * FROM devices ORDER BY building_name").fetchall()
